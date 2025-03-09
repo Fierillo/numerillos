@@ -32,15 +32,30 @@ client.on('guildMemberRemove', member => {
 // Update nickname function
 async function updateMemberCount(guild: any) {
   const botMember = guild.members.me; 
-  const newMemberCount = guild.memberCount;
+  // force fetch all members
+  await guild.members.fetch().catch((error: Error) =>
+    console.error(`Error fetching members: ${error}`)
+  );
+  // filter out bots
+  const humanCount = guild.members.cache.filter((m: any) => !m.user.bot).size;
   const currentMemberCount = botMember.displayName; 
-  if (newMemberCount === currentMemberCount) return
-  await botMember.setNickname(`Guerreros: ${newMemberCount}`).catch((error: Error) =>
-    console.error(`Error al cambiar apodo: ${error}`));
+
+  // exit if the count is the same
+  if (currentMemberCount === `Guerreros: ${humanCount}`) return;
+
+  await botMember.setNickname(`Guerreros: ${humanCount}`).catch((error: Error) =>
+    console.error(`Error trying to change nickname: ${error}`)
+  );
 }
 
 // Update status function
-function updateStatus(guild: any) {
+async function updateStatus(guild: any) {
+  // force fetch all members
+  await guild.members.fetch().catch((error: Error) =>
+    console.error(`Error fetching members: ${error}`)
+  );
+  
+  // get the desired role
   const role = guild.roles.cache.find((r: { name: string; id: string; }) => r.name === STATUS_ROLE || r.id === STATUS_ROLE);
   if (!role) {
     console.error(`Role ${STATUS_ROLE} not found in server ${guild.name}`);
@@ -48,13 +63,14 @@ function updateStatus(guild: any) {
     return;
   }
 
+  // get the role count and update the status
   const roleCount = role.members.size; 
   client.user!.setPresence({
     activities: [
       {
         type: ActivityType.Custom,
         name: 'custom',
-        state: `${STATUS_ROLE}s: ${roleCount}`,
+        state: `${STATUS_ROLE}: ${roleCount}`,
       },
     ],
     status: 'online',
