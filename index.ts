@@ -5,16 +5,20 @@ const client = new Client({
 import { config } from 'dotenv';
 config();
 
-// Role to track in status
-const STATUS_ROLE = process.env.STATUS_ROLE || '';
+// CONSTANTS
+const STATUS_ROLE = process.env.STATUS_ROLE;
+const SERVER_ID: any = process.env.SERVER_ID;
 
 // Starting event
 client.on('ready', () => {
   console.log(`${client.user?.tag} is alive!`);
-  client.guilds.cache.forEach(guild => {
+  const guild = client.guilds.cache.get(SERVER_ID);
+  if (guild) {
     updateMemberCount(guild);
     updateStatus(guild); 
-  });
+  } else {
+    console.error(`Guild with ID ${SERVER_ID} not found`);
+  }
 });
 
 // Update member count when a member joins
