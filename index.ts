@@ -2,8 +2,8 @@ import { ActivityType, Client, GatewayIntentBits } from 'discord.js';
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
-import dotenv from 'dotenv';
-dotenv.config();
+import { config } from 'dotenv';
+config();
 
 // Role to track in status
 const STATUS_ROLE = process.env.STATUS_ROLE || '';
