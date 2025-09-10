@@ -5,46 +5,38 @@ const client = new Client({
 import { config } from 'dotenv';
 config();
 
-// CONSTANTS
 const STATUS_ROLE = process.env.STATUS_ROLE;
 const SERVER_ID: any = process.env.SERVER_ID;
 
-// Starting event
 client.on('ready', () => {
   console.log(`${client.user?.tag} is alive!`);
   const guild = client.guilds.cache.get(SERVER_ID);
   if (guild) {
     updateMemberCount(guild);
-    updateStatus(guild); 
+    updateStatus(guild);
   } else {
     console.error(`Guild with ID ${SERVER_ID} not found`);
   }
 });
 
-// Update member count when a member joins
 client.on('guildMemberAdd', member => {
   updateMemberCount(member.guild);
   updateStatus(member.guild);
 });
 
-// ... and when a member leaves
 client.on('guildMemberRemove', member => {
   updateMemberCount(member.guild);
   updateStatus(member.guild);
 });
 
-// Update nickname function
 async function updateMemberCount(guild: any) {
-  const botMember = guild.members.me; 
-  // force fetch all members
+  const botMember = guild.members.me;
   await guild.members.fetch().catch((error: Error) =>
     console.error(`Error fetching members: ${error}`)
   );
-  // filter out bots
   const humanCount = guild.members.cache.filter((m: any) => !m.user.bot).size;
-  const currentMemberCount = botMember.displayName; 
+  const currentMemberCount = botMember.displayName;
 
-  // exit if the count is the same
   if (currentMemberCount === `Guerreros: ${humanCount}`) return;
 
   await botMember.setNickname(`Guerreros: ${humanCount}`).catch((error: Error) =>
@@ -52,22 +44,20 @@ async function updateMemberCount(guild: any) {
   );
 }
 
-// Update status function
 async function updateStatus(guild: any) {
-  // force fetch all members
   await guild.members.fetch().catch((error: Error) =>
     console.error(`Error fetching members: ${error}`)
   );
   
-  // get the desired role
-  const role = guild.roles.cache.find((r: { name: string; id: string; }) => r.name === STATUS_ROLE || r.id === STATUS_ROLE);
-  if (!role) {
-    console.error(`Role ${STATUS_ROLE} not found in server ${guild.name}`);
-    client.user?.setActivity(`Rol no encontrado`);
-    return;
-  }
+  
+  const role = guild.roles.cache.find((r: { name: string; id: string; }) => {
+    if (STATUS_ROLE && STATUS_ROLE.includes('*')) {
+      const regex = new RegExp(STATUS_ROLE.replace(/\*/g, '.*'), 'i');
+      return regex.test(r.name) || r.id === STATUS_ROLE;
+    }
+    return r.name.toLowerCase().includes((STATUS_ROLE || '').toLowerCase()) || r.id === STATUS_ROLE;
+  });
 
-  // get the role count and update the status
   const roleCount = role.members.size; 
   client.user!.setPresence({
     activities: [
@@ -81,5 +71,4 @@ async function updateStatus(guild: any) {
   })
 }
 
-// Discord bot token authentication
 client.login(process.env.DISCORD_TOKEN);
