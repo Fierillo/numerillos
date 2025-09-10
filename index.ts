@@ -64,7 +64,7 @@ async function updateStatus(guild: any) {
       {
         type: ActivityType.Custom,
         name: 'custom',
-        state: `${STATUS_ROLE}: ${roleCount}`,
+        state: `${STATUS_ROLE}es: ${roleCount}`,
       },
     ],
     status: 'online',
